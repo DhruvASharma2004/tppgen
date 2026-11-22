@@ -18,3 +18,13 @@
 2026-11-22	8fa3aac	Hereditary transthyretin amyloidosis	EFO_0700065	run1	rc=0
 2026-11-22	8fa3aac	Myotonic dystrophy type 1	MONDO_0008056	run1	rc=0
 2026-11-22	8fa3aac	Facioscapulohumeral muscular dystrophy	MONDO_0001347	run1	rc=0
+2026-11-22	e24a55d	Cystic fibrosis	MONDO_0009061	run1	rc=0
+2026-11-22	e24a55d	Spinal muscular atrophy	MONDO_0001516	run1	rc=0
+2026-11-22	e24a55d	Duchenne muscular dystrophy	MONDO_0010679	run1	rc=0
+2026-11-22	e24a55d	Pompe disease	MONDO_0009290	run1	rc=0
+2026-11-22	e24a55d	Fabry disease	MONDO_0010526	run1	rc=0
+2026-11-22	e24a55d	Gaucher disease type 1	MONDO_0009265	run1	rc=0
+2026-11-22	e24a55d	Phenylketonuria	MONDO_0009861	run1	rc=0
+2026-11-22	e24a55d	Hereditary transthyretin amyloidosis	EFO_0700065	run1	rc=0
+2026-11-22	e24a55d	Myotonic dystrophy type 1	MONDO_0008056	run1	rc=0
+2026-11-22	e24a55d	Facioscapulohumeral muscular dystrophy	MONDO_0001347	run1	rc=0

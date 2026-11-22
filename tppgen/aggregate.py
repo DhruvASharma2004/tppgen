@@ -44,7 +44,8 @@ SAFETY_PATTERNS = re.compile(
     r"anti[- ]?drug antibod|\bada\b|neutrali[sz]ing antibod|immunogenicit|ige antibod|"
     r"infusion[- ]related|infusion[- ]associated|injection site|hypersensitivity|"
     r"pharmacokinetic|\bpk\b|\bauc|\bcmax\b|\btmax\b|plasma concentration|half[- ]life|"
-    r"tanner stage|growth velocity",
+    r"tanner stage|growth velocity|adverse reaction|heart rate|blood pressure|"
+    r"concomitant medication",
     re.I,
 )
 
@@ -55,7 +56,8 @@ OPERATIONAL_PATTERNS = re.compile(
     r"number of (subjects|participants) (who |that )?(provided|completed|attended)|"
     r"demographic|compliance|adherence|diary|ease of use|acceptab|palatab|"
     r"premedication|patient history|medical history|baseline values?\b|"
-    r"qualitative feedback|satisfaction|reproducibilit",
+    r"qualitative feedback|satisfaction|reproducibilit|^diagnosis|prevalence|"
+    r"^primary endpoints?$|the study will evaluate",
     re.I,
 )
 
@@ -80,7 +82,16 @@ def is_operational_endpoint(text: str) -> bool:
 
 
 def rank_endpoints(studies: list[dict], which: str = "primary_outcomes", top: int = 8,
-                   efficacy_only: bool = False) -> Evidence:
+                   efficacy_only: bool = False, _tiered: bool = False) -> Evidence:
+    if efficacy_only and not _tiered:
+        # Pivotal trials define the endpoint regulators accept. Small phase 1 and
+        # observational studies outnumber them, so rank late-phase trials first
+        # and fall back only when none register a usable endpoint.
+        for tier in (("PHASE3", "PHASE4"), ("PHASE2",)):
+            subset = [s for s in studies if set(s.get("phases") or []) & set(tier)]
+            ev = rank_endpoints(subset, which, top, efficacy_only=True, _tiered=True)
+            if ev.supported:
+                return ev
     counter: Counter[str] = Counter()
     examples: dict[str, dict] = {}
     for s in studies:
