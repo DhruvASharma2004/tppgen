@@ -5,6 +5,8 @@ demoted to a gap with the reason "no public record found", rather than drafted.
 """
 from __future__ import annotations
 
+import re
+
 from typing import Any
 
 from . import aggregate, fields
@@ -36,11 +38,48 @@ def _demote(f: fields.Field, reason: str) -> dict:
     return _entry(f, None, [], band=GAP) | {"note": reason}
 
 
+DOSE_RE = re.compile(r"\d[\d.,]*\s*(mg|mcg|µg|g|units?|u|ml|vector genomes|vg)(/kg)?\b", re.I)
+
+
+def _dose_sentence(text: str | None) -> str | None:
+    """The sentence that states the dose, not the monitoring or selection text
+    that often opens the Dosage and Administration section."""
+    if not text:
+        return None
+    sents = re.split(r"(?<=[.;])\s+", text)
+    for want in (r"recommended (starting |initial |maintenance )?dos", r"\bdos(e|age)\b"):
+        for sent in sents:
+            if re.search(want, sent, re.I) and DOSE_RE.search(sent):
+                return sent.strip()[:260]
+    for sent in sents:
+        if DOSE_RE.search(sent):
+            return sent.strip()[:260]
+    return None
+
+
+def _first_sentences(text: str | None, limit: int = 260) -> str | None:
+    if not text:
+        return None
+    text = re.sub(r"^\s*\d+(\.\d+)?\s*INDICATIONS AND USAGE\s*", "", text, flags=re.I)
+    return text.strip()[:limit]
+
+
+def _unique_labels(labels: list[dict]) -> list[dict]:
+    seen, out = set(), []
+    for lab in labels:
+        key = (lab.get("brand_name") or lab.get("generic_name") or "").lower()
+        if key and key not in seen:
+            seen.add(key)
+            out.append(lab)
+    return out
+
+
 def build(ctx: dict) -> list[dict]:
     """ctx carries: disease, studies, labels, ot (Open Targets detail), refs, orphan."""
     studies = ctx["studies"]
-    labels = ctx["labels"]
+    labels = _unique_labels(ctx["labels"])
     ot = ctx.get("ot") or {}
+    labelled = {(l.get("ot_drug") or "").lower() for l in labels}
     out: list[dict] = []
 
     for f in fields.FIELDS:
@@ -60,6 +99,12 @@ def build(ctx: dict) -> list[dict]:
                 continue
             v = ev.value
             parts = []
+            lab_pop = [(_name(l), _first_sentences(l.get("indications"), 200), l.get("url"))
+                       for l in labels[:3] if l.get("indications")]
+            if lab_pop:
+                parts.append("Approved populations: " + " | ".join(f"{n}: {t}" for n, t, _ in lab_pop))
+                v = dict(v, recurring_criteria=[])
+                ev.citations = [{"name": n, "url": u} for n, _, u in lab_pop] + ev.citations[:2]
             if v["age_bounds"]:
                 parts.append("Age " + ", ".join(f"{a} ({n} trials)" for a, n in v["age_bounds"]))
             if v["sex"]:
@@ -104,8 +149,8 @@ def build(ctx: dict) -> list[dict]:
 
         elif f.key == "regimen":
             key_map = {"regimen": "dosage"}
-            vals = [(_name(l), l.get(key_map[f.key]), l.get("url"))
-                    for l in labels if l.get(key_map[f.key])]
+            vals = [(_name(l), _dose_sentence(l.get(key_map[f.key])), l.get("url"))
+                    for l in labels if _dose_sentence(l.get(key_map[f.key]))]
             if not vals:
                 out.append(_demote(f, NO_APPROVED if not ctx.get("has_approved") else "Labels found, but none state this."))
                 continue
@@ -128,14 +173,25 @@ def build(ctx: dict) -> list[dict]:
             targets = ot.get("top_targets", [])
             # Drugs arrive ranked by clinical stage. An approved therapy's
             # mechanism describes this disease; a phase 1 candidate's may not.
-            on_target = [d for d in drugs if d.get("mechanism") and d.get("on_target")
-                         and d.get("rank", 9) <= 2]
+            with_label = [d for d in drugs if d.get("mechanism")
+                          and (d.get("drug") or "").lower() in labelled]
+            on_target = with_label or [d for d in drugs if d.get("mechanism") and d.get("on_target")
+                                       and d.get("rank", 9) <= 2]
             advanced = [d for d in drugs if d.get("mechanism") and d.get("rank", 9) <= 2]
             pool = on_target or advanced or [d for d in drugs if d.get("mechanism")]
             if not pool and not targets:
                 out.append(_demote(f, "No mechanism data in Open Targets for this term."))
                 continue
             seen, lines = set(), []
+            # Approved biologics often have no mechanism record in Open Targets;
+            # their label states it. Use the label before a later-stage candidate.
+            if not with_label:
+                for lab in labels[:3]:
+                    mech = _first_sentences(lab.get("mechanism"), 160)
+                    if mech:
+                        lines.append(f"{mech} ({_name(lab)}, Approved)")
+                if lines:
+                    pool = []
             for d in pool:
                 m = d["mechanism"]
                 if m in seen:
@@ -154,7 +210,9 @@ def build(ctx: dict) -> list[dict]:
 
         elif f.key == "soc":
             drugs = ctx.get("drugs") or []
-            approved = [d["drug"] for d in drugs if d.get("rank", 9) <= 1 and d.get("drug")]
+            ot_approved = [d["drug"] for d in drugs if d.get("rank", 9) <= 1 and d.get("drug")]
+            approved = [n for n in ot_approved if n.lower() in labelled] if labels else ot_approved
+            others = len(ot_approved) - len(approved)
             late = [s for s in studies if any(p in ("PHASE3", "PHASE4") for p in s.get("phases") or [])]
             if not approved and not late:
                 out.append(_demote(f, "No approved drugs or late-phase trials found."))
@@ -163,6 +221,9 @@ def build(ctx: dict) -> list[dict]:
                     if approved else "No approved drug recorded for this indication.")
             if len(approved) > 8:
                 text += f" (+{len(approved) - 8} more)"
+            if others > 0:
+                text += (f" · {others} more listed as approved by Open Targets but with no "
+                         f"FDA label naming this disease")
             text += f" · {len(late)} trials in phase 3 or 4."
             out.append(_entry(f, text, [{"name": _name(l), "url": l.get("url")} for l in labels[:5]]))
 

@@ -58,3 +58,13 @@
 2026-11-22	c289d78	Facioscapulohumeral muscular dystrophy	MONDO_0001347	run1	rc=0
 2026-11-22	c289d78	Facioscapulohumeral muscular dystrophy	MONDO_0001347	run2	rc=0
 2026-11-22	c289d78	Facioscapulohumeral muscular dystrophy	MONDO_0001347	run3	rc=0
+2026-11-22	c7a9135	Cystic fibrosis	MONDO_0009061	run1	rc=0
+2026-11-22	c7a9135	Spinal muscular atrophy	MONDO_0001516	run1	rc=0
+2026-11-22	c7a9135	Duchenne muscular dystrophy	MONDO_0010679	run1	rc=0
+2026-11-22	c7a9135	Pompe disease	MONDO_0009290	run1	rc=0
+2026-11-22	c7a9135	Fabry disease	MONDO_0010526	run1	rc=0
+2026-11-22	c7a9135	Gaucher disease type 1	MONDO_0009265	run1	rc=0
+2026-11-22	c7a9135	Phenylketonuria	MONDO_0009861	run1	rc=0
+2026-11-22	c7a9135	Hereditary transthyretin amyloidosis	EFO_0700065	run1	rc=0
+2026-11-22	c7a9135	Myotonic dystrophy type 1	MONDO_0008056	run1	rc=0
+2026-11-22	c7a9135	Facioscapulohumeral muscular dystrophy	MONDO_0001347	run1	rc=0
