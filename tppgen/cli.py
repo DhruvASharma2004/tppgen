@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 import webbrowser
 from pathlib import Path
@@ -31,6 +32,43 @@ def cmd_search(args) -> int:
             print(f"  {'':<16} {h['description'][:90]}")
     print("\nRun:  python -m tppgen build <ID>")
     return 0
+
+
+GENERIC_WORDS = {"disease", "type", "syndrome", "disorder", "deficiency", "the", "and",
+                 "with", "hereditary", "familial", "congenital", "of"}
+
+
+def _disease_terms(name: str, studies: list[dict], top: int = 5) -> list[set[str]]:
+    """The disease name plus the condition names trials most often use for it.
+
+    Ontology names differ from label wording ("glycogen storage disease II" vs
+    "Pompe disease"), so trial condition lists supply the common synonyms.
+    """
+    from collections import Counter
+    counts = Counter()
+    for s in studies:
+        for c in s.get("conditions") or []:
+            counts[c.lower().strip()] += 1
+    names = [name.lower()] + [c for c, _ in counts.most_common(top)]
+    terms = []
+    for n in names:
+        words = {w for w in re.findall(r"[a-z0-9]+", n) if len(w) > 2 and w not in GENERIC_WORDS}
+        if words and words not in terms:
+            terms.append(words)
+    return terms
+
+
+def _label_is_for(lab: dict, terms: list[set[str]]) -> bool:
+    """Keep a label only if its indication names this disease.
+
+    Open Targets marks a drug approved if it is approved anywhere for a related
+    term, which brings in a Gaucher product for Pompe or a urea-cycle drug for SMA.
+    """
+    text = (lab.get("indications") or "").lower()
+    if not text:
+        return False
+    found = set(re.findall(r"[a-z0-9]+", text))
+    return any(t <= found for t in terms)
 
 
 def cmd_build(args) -> int:
@@ -68,6 +106,7 @@ def cmd_build(args) -> int:
     # candidate often has an approved label for some other disease (a diabetes
     # combination trialled in myotonic dystrophy), and presenting that label as a
     # comparator for this disease is worse than presenting nothing.
+    disease_terms = _disease_terms(name, studies)
     if approved:
         print("Fetching labels for approved therapies ...")
         for d in approved[:args.max_labels]:
@@ -75,6 +114,10 @@ def cmd_build(args) -> int:
             if not raw:
                 continue
             lab = openfda.parse_label(raw)
+            if not _label_is_for(lab, disease_terms):
+                print(f"     skip {lab.get('brand_name') or d['drug']}: label indication "
+                      f"does not name this disease")
+                continue
             lab["ot_drug"] = d["drug"]
             lab["ot_phase"] = d["phase"]
             labels.append(lab)

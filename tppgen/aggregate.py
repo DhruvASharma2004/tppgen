@@ -39,7 +39,12 @@ def _norm_endpoint(text: str) -> str:
 SAFETY_PATTERNS = re.compile(
     r"adverse event|^safety\b|safety and tolerab|tolerability|toxicit|"
     r"dose[- ]limiting|\bdlts?\b|\bteaes?\b|\baes?\b|serious adverse|side effect|"
-    r"treatment[- ]emergent",
+    r"treatment[- ]emergent|clinically significant|abnormalit|vital sign|"
+    r"laborator|chemistry|hematolog|haematolog|coagulation|electrocardiogram|\becg\b|"
+    r"anti[- ]?drug antibod|\bada\b|neutrali[sz]ing antibod|immunogenicit|ige antibod|"
+    r"infusion[- ]related|infusion[- ]associated|injection site|hypersensitivity|"
+    r"pharmacokinetic|\bpk\b|\bauc|\bcmax\b|\btmax\b|plasma concentration|half[- ]life|"
+    r"tanner stage|growth velocity",
     re.I,
 )
 
@@ -47,7 +52,10 @@ SAFETY_PATTERNS = re.compile(
 OPERATIONAL_PATTERNS = re.compile(
     r"informed consent|study visit|enroll|recruit|retention|feasibilit|attendance|"
     r"protocol (adherence|compliance|deviation)|questionnaire completion|"
-    r"number of (subjects|participants) (who |that )?(provided|completed|attended)",
+    r"number of (subjects|participants) (who |that )?(provided|completed|attended)|"
+    r"demographic|compliance|adherence|diary|ease of use|acceptab|palatab|"
+    r"premedication|patient history|medical history|baseline values?\b|"
+    r"qualitative feedback|satisfaction|reproducibilit",
     re.I,
 )
 
@@ -95,6 +103,12 @@ def rank_endpoints(studies: list[dict], which: str = "primary_outcomes", top: in
     return Evidence(ranked, [e["example"] for e in ranked], len(studies))
 
 
+BOILERPLATE = re.compile(
+    r"criteria|may apply|above information|not intended to contain|protocol[- ]defined|"
+    r"willing and able|able to comply|informed consent|previous clinical trial|"
+    r"experimental drug|investigational (drug|product)|participated in", re.I)
+
+
 def summarise_population(studies: list[dict], top: int = 6) -> Evidence:
     """What the registered trials actually enrol: age bounds, sex, and common criteria."""
     ages, sexes, criteria = Counter(), Counter(), Counter()
@@ -107,7 +121,9 @@ def summarise_population(studies: list[dict], top: int = 6) -> Evidence:
         text = s.get("eligibility_text") or ""
         for line in text.splitlines():
             line = line.strip(" -•\t")
-            if 20 < len(line) < 140 and not line.lower().startswith(("inclusion", "exclusion")):
+            low = line.lower()
+            if (20 < len(line) < 140 and not low.startswith(("inclusion", "exclusion"))
+                    and not line.endswith(":") and not BOILERPLATE.search(low)):
                 criteria[line] += 1
         if s.get("url"):
             cited.append({"nct_id": s["nct_id"], "url": s["url"]})

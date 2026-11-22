@@ -171,7 +171,7 @@ def strengths_for_product(generic_name: str, limit: int = 5) -> list[str]:
             strength = (ing.get("strength") or "").strip()
             # Bulk-ingredient listings read "1 kg/kg"; that is a packaging
             # record, not a dose, and it is noise in a TPP.
-            if not strength or re.match(r"^[\d.]+\s*kg/[\d.]*kg$", strength, re.I):
+            if not strength or re.match(r"^[\d.]+\s*(k?g)/[\d.]*\1$", strength, re.I):
                 continue
             label = f"{ing.get('name', '')} {strength}".strip()
             if label and label not in out:
