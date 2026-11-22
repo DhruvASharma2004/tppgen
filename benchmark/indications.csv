@@ -1,0 +1,11 @@
+indication,search_term,has_approved_therapy,efo_id
+Cystic fibrosis,cystic fibrosis,yes,
+Spinal muscular atrophy,spinal muscular atrophy,yes,
+Duchenne muscular dystrophy,Duchenne muscular dystrophy,yes,
+Pompe disease,glycogen storage disease type II,yes,
+Fabry disease,Fabry disease,yes,
+Gaucher disease type 1,Gaucher disease type 1,yes,
+Phenylketonuria,phenylketonuria,yes,
+Hereditary transthyretin amyloidosis,hereditary ATTR amyloidosis,yes,
+Myotonic dystrophy type 1,myotonic dystrophy type 1,no,
+Facioscapulohumeral muscular dystrophy,facioscapulohumeral muscular dystrophy,no,
