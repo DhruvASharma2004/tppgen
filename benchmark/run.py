@@ -30,9 +30,11 @@ def slug(text: str) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", type=int, default=3)
+    ap.add_argument("--set", default="indications",
+                    help="indication list in benchmark/<set>.csv; outputs go to benchmark/outputs_<set>")
     args = ap.parse_args()
 
-    path = HERE / "indications.csv"
+    path = HERE / f"{args.set}.csv"
     rows = list(csv.DictReader(path.open()))
 
     for row in rows:
@@ -46,7 +48,7 @@ def main() -> int:
         w.writeheader()
         w.writerows(rows)
 
-    out_dir = HERE / "outputs"
+    out_dir = HERE / ("outputs" if args.set == "indications" else f"outputs_{args.set}")
     out_dir.mkdir(exist_ok=True)
     commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT,
                             capture_output=True, text=True).stdout.strip() or "unknown"
