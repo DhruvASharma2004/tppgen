@@ -1,11 +1,11 @@
 indication,search_term,has_approved_therapy,efo_id
-Niemann-Pick disease type C,Niemann-Pick disease type C,yes,
-Mucopolysaccharidosis type I,mucopolysaccharidosis type I,yes,
-Mucopolysaccharidosis type II,mucopolysaccharidosis type II,yes,
-Hypophosphatasia,hypophosphatasia,yes,
-X-linked hypophosphatemia,X-linked hypophosphatemia,yes,
-Friedreich ataxia,Friedreich ataxia,yes,
-Acid sphingomyelinase deficiency,acid sphingomyelinase deficiency,yes,
-Wilson disease,Wilson disease,yes,
-Angelman syndrome,Angelman syndrome,no,
-Limb-girdle muscular dystrophy,limb-girdle muscular dystrophy,no,
+Niemann-Pick disease type C,Niemann-Pick disease type C,yes,MONDO_0018982
+Mucopolysaccharidosis type I,mucopolysaccharidosis type I,yes,MONDO_0001586
+Mucopolysaccharidosis type II,mucopolysaccharidosis type II,yes,MONDO_0010674
+Hypophosphatasia,hypophosphatasia,yes,MONDO_0018570
+X-linked hypophosphatemia,X-linked hypophosphatemia,yes,MONDO_0010619
+Friedreich ataxia,Friedreich ataxia,yes,MONDO_0100339
+Acid sphingomyelinase deficiency,acid sphingomyelinase deficiency,yes,MONDO_0100464
+Wilson disease,Wilson disease,yes,MONDO_0010200
+Angelman syndrome,Angelman syndrome,no,MONDO_0007113
+Limb-girdle muscular dystrophy,limb-girdle muscular dystrophy,no,MONDO_0016971
