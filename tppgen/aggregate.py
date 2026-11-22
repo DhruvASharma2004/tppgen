@@ -25,6 +25,40 @@ class Evidence:
         return self.value is not None and self.n > 0
 
 
+# Sponsors name one measure many ways ("FEV1", "ppFEV1", "lung function").
+# Counting each wording separately splits the vote and lets a one-off endpoint
+# win, so known measures are folded into one label before counting.
+ENDPOINT_CONCEPTS = [
+    (r"fev ?1|forced expiratory volume|lung function|pulmonary function", "FEV1 (lung function)"),
+    (r"forced vital capacity|\bfvc\b", "Forced vital capacity (FVC)"),
+    (r"phenylalanine|\bphe\b", "Blood phenylalanine (Phe)"),
+    (r"\bgl-?3\b|\bgb3\b|globotriaosyl", "GL-3 / Gb3 reduction"),
+    (r"\begfr\b|glomerular filtration", "eGFR"),
+    (r"left ventricular mass|lvmi|ventricular (posterior )?wall|septum", "Left ventricular mass / wall thickness"),
+    (r"myotoni|hand[- ]?opening|\bvhot\b|hand function", "Myotonia (hand-opening time)"),
+    (r"six[- ]minute walk|6[- ]?minute walk|\b6mwt\b|\b6mwd\b", "Six-minute walk test (6MWT)"),
+    (r"north star|\bnsaa\b", "North Star Ambulatory Assessment (NSAA)"),
+    (r"hammersmith|\bhfmse\b", "Hammersmith Functional Motor Scale (HFMSE)"),
+    (r"motor milestone|bayley|chop[- ]?intend", "Infant motor milestones / development"),
+    (r"h(a)?emoglobin", "Hemoglobin"),
+    (r"spleen volume", "Spleen volume"),
+    (r"platelet", "Platelet count"),
+    (r"mnis|neuropathy impairment", "mNIS+7 (neuropathy impairment)"),
+    (r"pulmonary exacerbation", "Pulmonary exacerbations"),
+    (r"sweat chloride", "Sweat chloride"),
+    (r"quantitative muscle test|\bqmt\b", "Quantitative muscle testing (QMT)"),
+    (r"reachable workspace|relative surface area|\brsa\b", "Reachable workspace (RSA)"),
+]
+
+
+def endpoint_concept(text: str) -> str | None:
+    low = (text or "").lower()
+    for pat, label in ENDPOINT_CONCEPTS:
+        if re.search(pat, low):
+            return label
+    return None
+
+
 def _norm_endpoint(text: str) -> str:
     """Sponsors write the same endpoint many ways. Normalise before counting."""
     t = text.lower().strip()
@@ -99,12 +133,13 @@ def rank_endpoints(studies: list[dict], which: str = "primary_outcomes", top: in
         for raw in s.get(which) or []:
             if efficacy_only and (is_safety_endpoint(raw) or is_operational_endpoint(raw)):
                 continue
-            norm = _norm_endpoint(raw)
+            concept = endpoint_concept(raw)
+            norm = concept or _norm_endpoint(raw)
             if not norm or norm in seen:
                 continue
             seen.add(norm)
             counter[norm] += 1
-            examples.setdefault(norm, {"text": raw, "nct_id": s["nct_id"], "url": s["url"]})
+            examples.setdefault(norm, {"text": concept or raw, "nct_id": s["nct_id"], "url": s["url"]})
     if not counter:
         return Evidence(None)
     ranked = [

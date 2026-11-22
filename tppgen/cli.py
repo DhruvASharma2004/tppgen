@@ -71,6 +71,27 @@ def _label_is_for(lab: dict, terms: list[set[str]]) -> bool:
     return any(t <= found for t in terms)
 
 
+def _promote_labelled_drugs(drugs: list[dict], terms: list[set[str]], limit: int) -> None:
+    """Treat a late-stage drug as approved when its FDA label names this disease.
+
+    Open Targets stage is per disease term; an enzyme approved for "Gaucher
+    disease" can show as Phase 3 for "Gaucher disease type I". The FDA label
+    is the authority on what a drug is approved for.
+    """
+    checked = 0
+    for d in drugs:
+        if d.get("rank", 9) <= 1 or d.get("rank", 9) > 2 or checked >= limit:
+            continue
+        checked += 1
+        try:
+            raw = openfda.label_for_drug(d["drug"])
+        except ApiError:
+            continue
+        if raw and _label_is_for(openfda.parse_label(raw), terms):
+            d["rank"] = 0
+            d["phase"] = "Approved"
+
+
 def cmd_build(args) -> int:
     print(f"Resolving {args.efo_id} ...")
     try:
@@ -93,6 +114,8 @@ def cmd_build(args) -> int:
     print(f"  -> {len(studies)} interventional studies")
 
     drugs = ot.get("known_drugs") or []
+    disease_terms = _disease_terms(name, studies)
+    _promote_labelled_drugs(drugs, disease_terms, args.max_labels)
     approved = [d for d in drugs if d["rank"] <= 1]
     on_target = [d for d in approved if d.get("on_target")]
     print(f"  -> {len(drugs)} drugs/candidates in Open Targets; "
@@ -106,7 +129,6 @@ def cmd_build(args) -> int:
     # candidate often has an approved label for some other disease (a diabetes
     # combination trialled in myotonic dystrophy), and presenting that label as a
     # comparator for this disease is worse than presenting nothing.
-    disease_terms = _disease_terms(name, studies)
     if approved:
         print("Fetching labels for approved therapies ...")
         for d in approved[:args.max_labels]:
