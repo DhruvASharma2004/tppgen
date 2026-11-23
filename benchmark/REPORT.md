@@ -13,7 +13,34 @@ tppgen drafted Target Product Profiles for 10 rare diseases, 3 runs each (30 rep
 | Fields correctly left blank | **261 of 261** |
 | Runs that matched exactly | **10 of 10** indications, all 3 runs identical |
 
-**Important:** this is an in-sample result. The fixes that raised accuracy from 67% to 97% were made while looking at these same 10 diseases. A held-out set of new diseases is needed before this number can be quoted as the tool's general accuracy (see Next steps).
+**Important:** the 97% is an in-sample result; the held-out result is 89% (below). The fixes that raised accuracy from 67% to 97% were made while looking at these same 10 diseases. Quote the held-out figure.
+
+## Held-out result
+
+Ten new diseases, chosen and committed (`e7a3875`) before any run, then run on the same code (`94bae1d`) with no changes: Niemann-Pick type C, MPS I, MPS II, hypophosphatasia, X-linked hypophosphatemia, Friedreich ataxia, acid sphingomyelinase deficiency, Wilson disease, Angelman syndrome, limb-girdle muscular dystrophy.
+
+| Measure | Development set | **Held-out set** |
+|---|---|---|
+| Accuracy on drafted fields | 97% | **89%** (378 of 423) |
+| Recall on fillable fields | 97% | **89%** |
+| Fields correctly left blank | 261 of 261 | **267 of 267** |
+| Identical across 3 runs | 10 of 10 | **10 of 10** |
+
+**89% is the number to quote** for how tppgen performs on a disease it has not seen.
+
+Comparator fields from FDA labels (route, dosing, formulation, strengths, safety, standard of care) were right in every held-out disease with an approved drug. The errors concentrate in one place:
+
+| Field | Held-out errors (of 10) | Cause |
+|---|---|---|
+| Primary endpoint | 5 | A PK, immunogenicity or biomarker endpoint outranks the pivotal one when only one or two Phase 3 trials exist (ASMD, HPP, MPS I, MPS II, XLH) |
+| Efficacy threshold | 5 | Inherits the primary endpoint |
+| Secondary endpoints | 2 | Same cause |
+| Target population | 2 | Boilerplate criteria when no drug is approved |
+| Orphan designation | 1 | Ontology name ("X-linked dominant hypophosphatemic rickets") does not match FDA wording |
+
+Scores: [`scores_heldout.csv`](scores_heldout.csv) · Outputs: `outputs_heldout/`
+
+The next fix is to take the primary endpoint from the approved drug's label (Section 14, Clinical Studies) when one exists, instead of from trial counts. That fix will be tested on a third, new set.
 
 ## Indications
 
@@ -72,7 +99,7 @@ Two with none (tests whether the tool invents comparators): myotonic dystrophy t
 
 ## Next steps
 
-1. Pick 10 new rare diseases not used during development, commit the list, then run and score them without changing code. That gives a held-out accuracy figure.
+1. Take the primary endpoint from label Section 14 when a drug is approved; test on a third, new set.
 2. Fix the five remaining errors above.
 3. Add an independent second scorer for a sample of fields.
 

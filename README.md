@@ -10,7 +10,7 @@ last seven as named, empty gaps. It does not invent them.
 
 ## Benchmark
 
-Tested on 10 rare diseases, 3 runs each, against FDA labels, ClinicalTrials.gov and FDA orphan designations: **97% accuracy on drafted fields, 261 of 261 internal-only fields correctly left blank.** This is an in-sample result; a held-out set is next. Full method and limits: [`benchmark/REPORT.md`](benchmark/REPORT.md).
+Tested on 20 rare diseases (10 development, 10 held out), 3 runs each, against FDA labels, ClinicalTrials.gov and FDA orphan designations: **89% accuracy on 10 held-out diseases** (97% on the development set), with every internal-only field correctly left blank in both. Full method and limits: [`benchmark/REPORT.md`](benchmark/REPORT.md).
 
 ## Install
 
