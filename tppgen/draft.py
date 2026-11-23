@@ -64,10 +64,14 @@ def _first_sentences(text: str | None, limit: int = 260) -> str | None:
     return text.strip()[:limit]
 
 
+_EP = r"(?:endpoint|outcome|efficacy measure|measure|variable)(?:\s+(?:assessments?|measures?|variables?))?s?"
 PRIMARY_RES = [
-    re.compile(r"(?:co-)?primary (?:efficacy )?(?:endpoint|outcome measure|outcome|efficacy measure|measure)s?"
+    # "The primary efficacy outcome assessments were X" / "The co-primary endpoints were X"
+    re.compile(r"(?:co-)?primary (?:efficacy )?" + _EP +
                r"(?: of efficacy)?(?: in [^,.]{0,40})?,? (?:was|were|is|are|included)\s+(?:the\s+)?([^.;]{6,180})", re.I),
-    re.compile(r"\befficacy (?:endpoint|outcome measure|outcome|measure)s?(?: in [^,.]{0,40})?,? (?:was|were|is|are|included)\s+(?:the\s+)?([^.;]{6,180})", re.I),
+    # "X at Week 40 is the primary endpoint of Study 1"
+    re.compile(r"(?:^|[.;]\s+)(?:the\s+)?([^.;]{4,140}?) (?:is|was|were|are) the (?:co-)?primary (?:efficacy )?" + _EP, re.I),
+    re.compile(r"\befficacy " + _EP + r"(?: in [^,.]{0,40})?,? (?:was|were|is|are|included)\s+(?:the\s+)?([^.;]{6,180})", re.I),
     re.compile(r"\befficacy was (?:primarily )?(?:assessed|evaluated|measured|determined|established) "
                r"(?:by|using|based on|on the basis of)\s+(?:the\s+)?([^.;]{6,180})", re.I),
 ]
