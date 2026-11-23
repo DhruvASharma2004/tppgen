@@ -64,6 +64,27 @@ def _first_sentences(text: str | None, limit: int = 260) -> str | None:
     return text.strip()[:limit]
 
 
+PRIMARY_RE = re.compile(
+    r"primary (?:efficacy )?(?:endpoint|outcome|efficacy measure|measure)s?"
+    r"(?: of efficacy)?(?: in [^,.]{0,40})?,? (?:was|were|is|are|included)\s+(?:the\s+)?([^.;]{6,180})",
+    re.I)
+
+
+def label_primary_endpoints(labels: list[dict]) -> list[tuple[str, str, str | None]]:
+    """Primary endpoints as the approved labels state them (Section 14).
+
+    The label names the endpoint FDA accepted; trial registries count every
+    small study equally, so a PK or biomarker endpoint can outnumber it.
+    """
+    out = []
+    for lab in labels:
+        m = PRIMARY_RE.search(lab.get("clinical_studies") or "")
+        if m:
+            ep = re.sub(r"\s*\(\s*\)\s*", " ", m.group(1)).strip(" ,")
+            out.append((ep[:160], _name(lab), lab.get("url")))
+    return out
+
+
 def _unique_labels(labels: list[dict]) -> list[dict]:
     seen, out = set(), []
     for lab in labels:
@@ -157,6 +178,15 @@ def build(ctx: dict) -> list[dict]:
             text = " · ".join(f"{n}: {str(v)}" for n, v, _ in vals[:3])
             out.append(_entry(f, text, [{"name": n, "url": u} for n, _, u in vals[:4]]))
 
+        elif f.key == "primary_endpoint" and label_primary_endpoints(labels):
+            eps = label_primary_endpoints(labels)
+            text = "From approved labels: " + "; ".join(f"{e} ({n})" for e, n, _ in eps[:3])
+            ev = aggregate.rank_endpoints(studies, "primary_outcomes", efficacy_only=True)
+            if ev.supported:
+                text += " · Most frequent in late-phase trials: " + "; ".join(
+                    f"{r['endpoint'][:80]} ({r['trials']})" for r in ev.value[:3])
+            out.append(_entry(f, text, [{"name": n, "url": u} for _, n, u in eps[:3]] + (ev.citations[:2] if ev.supported else [])))
+
         elif f.key in ("primary_endpoint", "secondary_endpoints"):
             which = "primary_outcomes" if f.key == "primary_endpoint" else "secondary_outcomes"
             ev = aggregate.rank_endpoints(studies, which, efficacy_only=True)
@@ -245,6 +275,13 @@ def build(ctx: dict) -> list[dict]:
                        "efficacy measure to benchmark against yet."))
                 continue
             top_ep = ev.value[0]["endpoint"]
+            lab_eps = label_primary_endpoints(labels)
+            if lab_eps:
+                e, n, u = lab_eps[0]
+                out.append(_entry(f, f"Endpoint the approved therapy was judged on: {e} ({n}). "
+                                     "Set your own threshold against what it achieved there.",
+                                  [{"name": n, "url": u}]))
+                continue
             if ctx.get("has_approved"):
                 text = (f"Most-used efficacy endpoint across registered trials: {top_ep[:140]}. "
                         "Set your own threshold against what approved therapy achieves on it.")
