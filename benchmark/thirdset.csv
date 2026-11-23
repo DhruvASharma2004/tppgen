@@ -1,11 +1,11 @@
 indication,search_term,has_approved_therapy,efo_id
-Alpha-mannosidosis,alpha-mannosidosis,yes,
-Mucopolysaccharidosis type IVA,mucopolysaccharidosis type IVA,yes,
-Mucopolysaccharidosis type VI,mucopolysaccharidosis type VI,yes,
-CLN2 disease,neuronal ceroid lipofuscinosis 2,yes,
-Nephropathic cystinosis,nephropathic cystinosis,yes,
-Hereditary angioedema,hereditary angioedema,yes,
-Achondroplasia,achondroplasia,yes,
-Rett syndrome,Rett syndrome,yes,
-Charcot-Marie-Tooth disease type 1A,Charcot-Marie-Tooth disease type 1A,no,
-CLN3 disease,neuronal ceroid lipofuscinosis 3,no,
+Alpha-mannosidosis,alpha-mannosidosis,yes,MONDO_0009561
+Mucopolysaccharidosis type IVA,mucopolysaccharidosis type IVA,yes,MONDO_0018938
+Mucopolysaccharidosis type VI,mucopolysaccharidosis type VI,yes,MONDO_0009661
+CLN2 disease,neuronal ceroid lipofuscinosis 2,yes,MONDO_0008769
+Nephropathic cystinosis,nephropathic cystinosis,yes,MONDO_0100151
+Hereditary angioedema,hereditary angioedema,yes,MONDO_0019623
+Achondroplasia,achondroplasia,yes,MONDO_0007037
+Rett syndrome,Rett syndrome,yes,MONDO_0010726
+Charcot-Marie-Tooth disease type 1A,Charcot-Marie-Tooth disease type 1A,no,MONDO_0007309
+CLN3 disease,neuronal ceroid lipofuscinosis 3,no,MONDO_0008767
