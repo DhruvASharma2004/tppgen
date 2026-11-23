@@ -64,10 +64,13 @@ def _first_sentences(text: str | None, limit: int = 260) -> str | None:
     return text.strip()[:limit]
 
 
-PRIMARY_RE = re.compile(
-    r"primary (?:efficacy )?(?:endpoint|outcome|efficacy measure|measure)s?"
-    r"(?: of efficacy)?(?: in [^,.]{0,40})?,? (?:was|were|is|are|included)\s+(?:the\s+)?([^.;]{6,180})",
-    re.I)
+PRIMARY_RES = [
+    re.compile(r"(?:co-)?primary (?:efficacy )?(?:endpoint|outcome measure|outcome|efficacy measure|measure)s?"
+               r"(?: of efficacy)?(?: in [^,.]{0,40})?,? (?:was|were|is|are|included)\s+(?:the\s+)?([^.;]{6,180})", re.I),
+    re.compile(r"\befficacy (?:endpoint|outcome measure|outcome|measure)s?(?: in [^,.]{0,40})?,? (?:was|were|is|are|included)\s+(?:the\s+)?([^.;]{6,180})", re.I),
+    re.compile(r"\befficacy was (?:primarily )?(?:assessed|evaluated|measured|determined|established) "
+               r"(?:by|using|based on|on the basis of)\s+(?:the\s+)?([^.;]{6,180})", re.I),
+]
 
 
 def label_primary_endpoints(labels: list[dict]) -> list[tuple[str, str, str | None]]:
@@ -78,7 +81,8 @@ def label_primary_endpoints(labels: list[dict]) -> list[tuple[str, str, str | No
     """
     out = []
     for lab in labels:
-        m = PRIMARY_RE.search(lab.get("clinical_studies") or "")
+        text = lab.get("clinical_studies") or ""
+        m = next((r.search(text) for r in PRIMARY_RES if r.search(text)), None)
         if m:
             ep = re.sub(r"\s*\(\s*\)\s*", " ", m.group(1)).strip(" ,")
             out.append((ep[:160], _name(lab), lab.get("url")))
