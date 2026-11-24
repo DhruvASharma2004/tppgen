@@ -41,12 +41,22 @@ def _demote(f: fields.Field, reason: str) -> dict:
 DOSE_RE = re.compile(r"\d[\d.,]*\s*(mg|mcg|µg|g|units?|u|ml|vector genomes|vg)(/kg)?\b", re.I)
 
 
-def _dose_sentence(text: str | None) -> str | None:
-    """The sentence that states the dose, not the monitoring or selection text
-    that often opens the Dosage and Administration section."""
+ADJUST_RE = re.compile(r"renal|hepatic|egfr|impairment|see full prescribing|missed dose|"
+                       r"overdos|discontinu|interrupt|reduce the dos|dose reduction", re.I)
+
+
+def _dose_sentence(text: str | None, disease_words: set[str] | None = None) -> str | None:
+    """The sentence that states the dose, not the monitoring, selection or
+    dose-adjustment text around it. A label covering several diseases
+    (penicillamine: Wilson's, cystinuria, RA) is searched for this disease first."""
     if not text:
         return None
-    sents = re.split(r"(?<=[.;])\s+", text)
+    sents = [s for s in re.split(r"(?<=[.;])\s+", text) if not ADJUST_RE.search(s)]
+    if disease_words:
+        for sent in sents:
+            words = set(re.findall(r"[a-z0-9]+", sent.lower()))
+            if words & disease_words and DOSE_RE.search(sent):
+                return sent.strip()[:260]
     for want in (r"recommended (starting |initial |maintenance )?dos", r"\bdos(e|age)\b"):
         for sent in sents:
             if re.search(want, sent, re.I) and DOSE_RE.search(sent):
@@ -77,16 +87,27 @@ PRIMARY_RES = [
 ]
 
 
-def label_primary_endpoints(labels: list[dict]) -> list[tuple[str, str, str | None]]:
+def label_primary_endpoints(labels: list[dict], disease_words: set[str] | None = None
+                            ) -> list[tuple[str, str, str | None]]:
     """Primary endpoints as the approved labels state them (Section 14).
 
     The label names the endpoint FDA accepted; trial registries count every
     small study equally, so a PK or biomarker endpoint can outnumber it.
+    A label covering several diseases (Fabhalta: PNH, IgAN, C3G) has one
+    study per disease, so the match nearest a mention of this disease wins.
     """
     out = []
     for lab in labels:
         text = lab.get("clinical_studies") or ""
-        m = next((r.search(text) for r in PRIMARY_RES if r.search(text)), None)
+        hits = [m for r in PRIMARY_RES for m in r.finditer(text)]
+        m = None
+        if hits and disease_words:
+            def near(h):
+                window = set(re.findall(r"[a-z0-9]+", text[max(0, h.start() - 800):h.end()].lower()))
+                return bool(window & disease_words)
+            m = next((h for h in sorted(hits, key=lambda h: h.start()) if near(h)), None)
+        if m is None:
+            m = next((r.search(text) for r in PRIMARY_RES if r.search(text)), None)
         if m:
             ep = re.sub(r"\s*\(\s*\)\s*", " ", m.group(1)).strip(" ,")
             out.append((ep[:160], _name(lab), lab.get("url")))
@@ -181,17 +202,17 @@ def build(ctx: dict) -> list[dict]:
                               [{"name": n, "url": u} for n, _, u in found]))
 
         elif f.key == "regimen":
-            key_map = {"regimen": "dosage"}
-            vals = [(_name(l), _dose_sentence(l.get(key_map[f.key])), l.get("url"))
-                    for l in labels if _dose_sentence(l.get(key_map[f.key]))]
+            dw = ctx.get("disease_words") or set()
+            vals = [(_name(l), _dose_sentence(l.get("dosage"), dw), l.get("url"))
+                    for l in labels if _dose_sentence(l.get("dosage"), dw)]
             if not vals:
                 out.append(_demote(f, NO_APPROVED if not ctx.get("has_approved") else "Labels found, but none state this."))
                 continue
             text = " · ".join(f"{n}: {str(v)}" for n, v, _ in vals[:3])
             out.append(_entry(f, text, [{"name": n, "url": u} for n, _, u in vals[:4]]))
 
-        elif f.key == "primary_endpoint" and label_primary_endpoints(labels):
-            eps = label_primary_endpoints(labels)
+        elif f.key == "primary_endpoint" and label_primary_endpoints(labels, ctx.get("disease_words")):
+            eps = label_primary_endpoints(labels, ctx.get("disease_words"))
             text = "From approved labels: " + "; ".join(f"{e} ({n})" for e, n, _ in eps[:3])
             ev = aggregate.rank_endpoints(studies, "primary_outcomes", efficacy_only=True)
             if ev.supported:
@@ -281,7 +302,7 @@ def build(ctx: dict) -> list[dict]:
 
         elif f.key == "efficacy_threshold":
             ev = aggregate.rank_endpoints(studies, "primary_outcomes", efficacy_only=True)
-            lab_eps = label_primary_endpoints(labels)
+            lab_eps = label_primary_endpoints(labels, ctx.get("disease_words"))
             if not ev.supported and not lab_eps:
                 out.append(_demote(
                     f, "Registered trials report only safety endpoints, so there is no "

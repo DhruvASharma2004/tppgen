@@ -57,7 +57,11 @@ def _disease_terms(name: str, studies: list[dict], top: int = 5) -> list[set[str
     for s in studies:
         for c in s.get("conditions") or []:
             counts[c.lower().strip()] += 1
-    names = [name.lower()] + [c for c, _ in counts.most_common(top)]
+    # A condition counts as a synonym only if a quarter of the trials use it.
+    # The registry search is fuzzy: a Rett search returns a few tuberous
+    # sclerosis trials, and Epidiolex's label names tuberous sclerosis.
+    floor = max(2, len(studies) // 4)
+    names = [name.lower()] + [c for c, n in counts.most_common(top) if n >= floor]
     terms = []
     for n in names:
         words = {w for w in re.findall(r"[a-z0-9]+", n) if len(w) > 2 and w not in GENERIC_WORDS}
@@ -183,7 +187,9 @@ def cmd_build(args) -> int:
     ctx = {"disease": name, "studies": studies, "labels": labels, "drugs": drugs,
            "ot": ot, "refs": refs, "orphan": orphan_hits,
            "strengths": strengths, "dosage_forms": dosage_forms,
-           "has_approved": bool(approved)}
+           "has_approved": bool(approved),
+           "disease_words": {w for w in re.findall(r"[a-z0-9]+", name.lower())
+                             if len(w) > 2 and w not in GENERIC_WORDS}}
     drafted = draft.build(ctx)
     competitors = aggregate.competitive_table(studies, labels, drugs)
 

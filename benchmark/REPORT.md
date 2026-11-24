@@ -75,6 +75,39 @@ Scores: [`scores_thirdset.csv`](scores_thirdset.csv) · Outputs: `outputs_thirds
 
 Held-out outputs were also rerun on `46e842d`; MPS I now shows the Aldurazyme label endpoint (percent-predicted FVC and 6-minute walk). The 89% score is from the original held-out run and was not rescored.
 
+## Fourth set (clean held-out, after the third-set fixes)
+
+Ten new diseases, committed (`4d4b910`) before any code change or run: primary hyperoxaluria type 1, MPS VII, Lambert-Eaton myasthenic syndrome, paroxysmal nocturnal hemoglobinuria, generalized lipodystrophy, metachromatic leukodystrophy, OTC deficiency, ALS, Canavan disease, GM1 gangliosidosis. Run once on `0352d47`, 3 runs each, identical across runs, scored without code changes.
+
+| Measure | Held-out set 2 | **Held-out set 4** | **Both clean sets** |
+|---|---|---|---|
+| Accuracy on drafted fields | 89% (378/423) | **85%** (309/363) | **87%** (687/786) |
+| Recall on fillable fields | 89% | 76% (309/405) | — |
+| Fields correctly left blank | 267/267 | 285/285 | all |
+| Primary endpoint right | 5/10 | 5/10 | 10/20 |
+
+**87% across 20 unseen diseases is the number to quote.**
+
+Four diseases were near-perfect (LEMS, MPS VII, PH1, PNH). Errors concentrate in three:
+
+| Cause | Fields lost per run | Diseases |
+|---|---|---|
+| Approved drug not reachable: Open Targets lists no drug for the term, or the gene therapy has no openFDA label | 14 missing, 2 inaccurate | generalized lipodystrophy (Myalept), MLD (Lenmeldy) |
+| Operational, safety or biomarker endpoint ranked first where no label states one | 9 | GM1, MLD, OTC, lipodystrophy |
+| Wrong or incomplete standard of care | 3 | ALS (riluzole missing), OTC, lipodystrophy |
+| Wrong drug's mechanism | 2 | OTC (carglumic acid), lipodystrophy |
+| Orphan name mismatch ("ornithine carbamoyltransferase" vs FDA wording) | 1 | OTC |
+| Multi-disease label: endpoint taken from the IgAN study | 1 | PNH (Fabhalta) |
+| Boilerplate population | 1 | MLD |
+
+Scores: [`scores_fourthset.csv`](scores_fourthset.csv) · Outputs: `outputs_fourthset/` (left as run on `0352d47`).
+
+Fixes made after scoring (dose sentence chosen for this disease, kit strengths, synonym floor so a few off-target trials cannot add a synonym, multi-disease label endpoints) were checked on sets 1 to 3 only. They are not counted in any number above.
+
+### Cost check for the Claude extraction plan
+
+`token_estimate.py` on 130 cached labels: median 3,634 input tokens per call (Indications + Clinical Studies + 1,500 prompt), 90th percentile 7,733, maximum 12,797. The funding budget assumed 30,000, so the real cost is about a quarter of the estimate.
+
 ## Indications
 
 Eight with at least one FDA-approved therapy (tests comparator fields): cystic fibrosis, spinal muscular atrophy, Duchenne muscular dystrophy, Pompe disease, Fabry disease, Gaucher disease type 1, phenylketonuria, hereditary transthyretin amyloidosis.

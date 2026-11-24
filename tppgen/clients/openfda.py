@@ -190,6 +190,11 @@ def strengths_for_product(generic_name: str, limit: int = 5, brand_name: str | N
     if not generic_name and not brand_name:
         return []
     results = _ndc_records(generic_name, brand_name, limit)
+    if brand_name and generic_name and not any(
+            (ing.get("strength") or "").strip()
+            for rec in results for ing in rec.get("active_ingredients") or []):
+        # Kits (Voxzogo, Brineura) list no strength under the brand record.
+        results = _ndc_records(generic_name, None, limit)
     out: list[str] = []
     for rec in results:
         for ing in rec.get("active_ingredients") or []:
