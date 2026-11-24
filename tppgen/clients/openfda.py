@@ -121,7 +121,9 @@ def parse_label(label: dict) -> dict:
         "adverse_reactions": clean(text("adverse_reactions")),
         "interactions": clean(text("drug_interactions")),
         "mechanism": clean(text("mechanism_of_action")),
-        "clinical_studies": clean(text("clinical_studies")),
+        # Full Section 14: the primary-endpoint sentence is often past the first
+        # 400 characters (Aldurazyme), and this text is only searched, never shown.
+        "clinical_studies": clean(text("clinical_studies"), limit=50000),
         "url": (
             f"https://www.accessdata.fda.gov/scripts/cder/daf/index.cfm?event=overview.process&ApplNo={app_no.lstrip('NDABLA')}"
             if app_no else None
