@@ -37,6 +37,14 @@ def cmd_search(args) -> int:
 GENERIC_WORDS = {"disease", "type", "syndrome", "disorder", "deficiency", "the", "and",
                  "with", "hereditary", "familial", "congenital", "of"}
 
+# Trial condition lists often name a symptom ("Seizures", "Epilepsy") next to
+# the disease. A label naming that symptom is for another disease: Epidiolex
+# (seizures in Lennox-Gastaut) matched Rett syndrome through "seizures".
+SYMPTOM_WORDS = {"seizure", "seizures", "epilepsy", "epileptic", "pain", "anxiety",
+                 "depression", "constipation", "sleep", "insomnia", "obesity", "healthy",
+                 "volunteers", "fatigue", "spasticity", "scoliosis", "infection",
+                 "inflammation", "fever", "cough", "nausea", "vomiting", "diarrhea"}
+
 
 def _disease_terms(name: str, studies: list[dict], top: int = 5) -> list[set[str]]:
     """The disease name plus the condition names trials most often use for it.
@@ -53,6 +61,8 @@ def _disease_terms(name: str, studies: list[dict], top: int = 5) -> list[set[str
     terms = []
     for n in names:
         words = {w for w in re.findall(r"[a-z0-9]+", n) if len(w) > 2 and w not in GENERIC_WORDS}
+        if n != name.lower() and words & SYMPTOM_WORDS:
+            continue
         if words and words not in terms:
             terms.append(words)
     return terms
@@ -144,10 +154,15 @@ def cmd_build(args) -> int:
             lab["ot_phase"] = d["phase"]
             labels.append(lab)
             gn = lab.get("generic_name")
+            bn = lab.get("brand_name")
             if gn and gn not in strengths:
-                strengths[gn] = openfda.strengths_for_product(gn)
+                strengths[gn] = openfda.strengths_for_product(gn, brand_name=bn)
                 if not lab.get("dosage_form"):
-                    dosage_forms[gn] = openfda.dosage_forms_for_product(gn)
+                    dosage_forms[gn] = openfda.dosage_forms_for_product(gn, brand_name=bn)
+            if not lab.get("route"):
+                ndc_routes = openfda.routes_for_product(gn or "", bn)
+                if ndc_routes:
+                    lab["route"] = ndc_routes[0]
         print(f"  -> {len(labels)} labels matched")
     else:
         print("  -> no approved therapy in this indication; comparator fields "

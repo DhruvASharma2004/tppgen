@@ -115,7 +115,9 @@ def parse_label(label: dict) -> dict:
         "route": first("route"),
         "dosage_form": first("dosage_form"),
         "indications": clean(text("indications_and_usage")),
-        "dosage": clean(text("dosage_and_administration")),
+        # Searched for the dose sentence, never shown whole; the dose is often
+        # past the first 400 characters (Brineura, Kalbitor).
+        "dosage": clean(text("dosage_and_administration"), limit=20000),
         "contraindications": clean(text("contraindications")),
         "warnings": clean(text("warnings_and_cautions") or text("warnings")),
         "adverse_reactions": clean(text("adverse_reactions")),
@@ -149,32 +151,54 @@ def faers_reactions(drug_name: str, limit: int = 10) -> list[dict]:
     return results
 
 
-def dosage_forms_for_product(generic_name: str, limit: int = 5) -> list[str]:
-    """Dosage forms from the NDC directory. Many labels omit openfda.dosage_form."""
+def _ndc_records(generic_name: str, brand_name: str | None, limit: int) -> list[dict]:
+    """NDC records for this product. Brand first: a generic-name search also
+    returns other products and bulk ingredients (Cystaran for Cystadrops)."""
+    if brand_name:
+        recs = _query("ndc", f'brand_name:"{brand_name.replace(chr(34), "")}"', limit)
+        if recs:
+            return recs
     if not generic_name:
         return []
-    quoted = generic_name.replace('"', "")
+    return _query("ndc", f'generic_name:"{generic_name.replace(chr(34), "")}"', limit)
+
+
+def routes_for_product(generic_name: str, brand_name: str | None = None) -> list[str]:
+    """Routes from the NDC directory, for labels with no openfda.route."""
     out: list[str] = []
-    for rec in _query("ndc", f'generic_name:"{quoted}"', limit):
+    for rec in _ndc_records(generic_name, brand_name, 5):
+        for r in rec.get("route") or []:
+            if r not in out:
+                out.append(r)
+    return out
+
+
+def dosage_forms_for_product(generic_name: str, limit: int = 5, brand_name: str | None = None) -> list[str]:
+    """Dosage forms from the NDC directory. Many labels omit openfda.dosage_form."""
+    if not generic_name and not brand_name:
+        return []
+    out: list[str] = []
+    for rec in _ndc_records(generic_name, brand_name, limit):
         form = rec.get("dosage_form")
         if form and form not in out:
             out.append(form)
     return out
 
 
-def strengths_for_product(generic_name: str, limit: int = 5) -> list[str]:
+def strengths_for_product(generic_name: str, limit: int = 5, brand_name: str | None = None) -> list[str]:
     """Marketed strengths, from the NDC directory. The label does not carry these."""
-    if not generic_name:
+    if not generic_name and not brand_name:
         return []
-    quoted = generic_name.replace('"', "")
-    results = _query("ndc", f'generic_name:"{quoted}"', limit)
+    results = _ndc_records(generic_name, brand_name, limit)
     out: list[str] = []
     for rec in results:
         for ing in rec.get("active_ingredients") or []:
             strength = (ing.get("strength") or "").strip()
             # Bulk-ingredient listings read "1 kg/kg"; that is a packaging
             # record, not a dose, and it is noise in a TPP.
-            if not strength or re.match(r"^[\d.]+\s*(k?g)/[\d.]*\1$", strength, re.I):
+            # A strength "per kg" is a bulk record too ("8 g/kg"), not a vial.
+            if (not strength or re.match(r"^[\d.]+\s*(k?g)/[\d.]*\1$", strength, re.I)
+                    or re.search(r"/\s*[\d.]*\s*kg$", strength, re.I)):
                 continue
             label = f"{ing.get('name', '')} {strength}".strip()
             if label and label not in out:

@@ -35,7 +35,7 @@ ENDPOINT_CONCEPTS = [
     (r"\bgl-?3\b|\bgb3\b|globotriaosyl", "GL-3 / Gb3 reduction"),
     (r"\begfr\b|glomerular filtration", "eGFR"),
     (r"left ventricular mass|lvmi|ventricular (posterior )?wall|septum", "Left ventricular mass / wall thickness"),
-    (r"myotoni|hand[- ]?opening|\bvhot\b|hand function", "Myotonia (hand-opening time)"),
+    (r"myotoni|hand[- ]?opening|\bvhot\b", "Myotonia (hand-opening time)"),
     (r"six[- ]minute walk|6[- ]?minute walk|\b6mwt\b|\b6mwd\b", "Six-minute walk test (6MWT)"),
     (r"north star|\bnsaa\b", "North Star Ambulatory Assessment (NSAA)"),
     (r"hammersmith|\bhfmse\b", "Hammersmith Functional Motor Scale (HFMSE)"),
@@ -79,7 +79,7 @@ SAFETY_PATTERNS = re.compile(
     r"infusion[- ]related|infusion[- ]associated|injection site|hypersensitivity|"
     r"pharmacokinetic|\bpk\b|\bauc|\bcmax\b|\btmax\b|plasma concentration|half[- ]life|"
     r"tanner stage|growth velocity|adverse reaction|heart rate|blood pressure|"
-    r"concomitant medication",
+    r"concomitant medication|pharmacodynamic|biomarker",
     re.I,
 )
 
@@ -152,7 +152,8 @@ def rank_endpoints(studies: list[dict], which: str = "primary_outcomes", top: in
 BOILERPLATE = re.compile(
     r"criteria|may apply|above information|not intended to contain|protocol[- ]defined|"
     r"willing and able|able to comply|informed consent|previous clinical trial|"
-    r"experimental drug|investigational (drug|product)|participated in", re.I)
+    r"experimental drug|investigational (drug|product)|participated in|"
+    r"contracepti|birth control|tubal|vasectom|sterili[sz]|abstinen|pregnan|breast[- ]?feed|lactat", re.I)
 
 
 def summarise_population(studies: list[dict], top: int = 6) -> Evidence:

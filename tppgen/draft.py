@@ -123,9 +123,13 @@ def build(ctx: dict) -> list[dict]:
 
         elif f.key == "population":
             ev = aggregate.summarise_population(studies)
-            if not ev.supported:
+            has_label_pop = any(l.get("indications") for l in labels)
+            if not ev.supported and not has_label_pop:
                 out.append(_demote(f, "No registered trials found for this indication."))
                 continue
+            if not ev.supported:
+                # Approved drug, no registered trials: the label still states who it is for.
+                ev = aggregate.Evidence({"age_bounds": [], "sex": [], "recurring_criteria": []}, [], 0)
             v = ev.value
             parts = []
             lab_pop = [(_name(l), _first_sentences(l.get("indications"), 200), l.get("url"))
@@ -277,19 +281,19 @@ def build(ctx: dict) -> list[dict]:
 
         elif f.key == "efficacy_threshold":
             ev = aggregate.rank_endpoints(studies, "primary_outcomes", efficacy_only=True)
-            if not ev.supported:
+            lab_eps = label_primary_endpoints(labels)
+            if not ev.supported and not lab_eps:
                 out.append(_demote(
                     f, "Registered trials report only safety endpoints, so there is no "
                        "efficacy measure to benchmark against yet."))
                 continue
-            top_ep = ev.value[0]["endpoint"]
-            lab_eps = label_primary_endpoints(labels)
             if lab_eps:
                 e, n, u = lab_eps[0]
                 out.append(_entry(f, f"Endpoint the approved therapy was judged on: {e} ({n}). "
                                      "Set your own threshold against what it achieved there.",
                                   [{"name": n, "url": u}]))
                 continue
+            top_ep = ev.value[0]["endpoint"]
             if ctx.get("has_approved"):
                 text = (f"Most-used efficacy endpoint across registered trials: {top_ep[:140]}. "
                         "Set your own threshold against what approved therapy achieves on it.")
