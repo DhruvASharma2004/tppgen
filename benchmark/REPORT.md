@@ -102,7 +102,7 @@ Four diseases were near-perfect (LEMS, MPS VII, PH1, PNH). Errors concentrate in
 
 Scores: [`scores_fourthset.csv`](scores_fourthset.csv) · Outputs: `outputs_fourthset/` (left as run on `0352d47`).
 
-Fixes made after scoring (dose sentence chosen for this disease, kit strengths, synonym floor so a few off-target trials cannot add a synonym, multi-disease label endpoints) were checked on sets 1 to 3 only. They are not counted in any number above.
+Fixes made after scoring (dose sentence chosen for this disease, kit strengths, synonym floor so a few off-target trials cannot add a synonym, multi-disease label endpoints) were checked on sets 1 to 3 only. They are not counted in any number above. Still open after those fixes: penicillamine (Wilson) shows its rheumatoid-arthritis dose, because a multi-indication label is not split by disease; Voxzogo strength is blank, because its only NDC strength record is a bulk "per kg" entry.
 
 ### Cost check for the Claude extraction plan
 

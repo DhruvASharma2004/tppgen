@@ -10,12 +10,28 @@ last seven as named, empty gaps. It does not invent them.
 
 ## Benchmark
 
-Tested on 20 rare diseases (10 development, 10 held out), 3 runs each, against FDA labels, ClinicalTrials.gov and FDA orphan designations: **89% accuracy on 10 held-out diseases** (97% on the development set), with every internal-only field correctly left blank in both. Full method and limits: [`benchmark/REPORT.md`](benchmark/REPORT.md).
+Scored against FDA labels, ClinicalTrials.gov and FDA orphan designations with a rubric committed before any run. **87% accuracy on 20 rare diseases the tool had never seen** (two held-out sets of 10, each committed before it was run: 89% and 85%). Every internal-only field was left blank in every run, and repeat runs were identical. Full method, every score and every failure: [`benchmark/REPORT.md`](benchmark/REPORT.md).
+
+## Example
+
+Lambert-Eaton myasthenic syndrome, from the held-out run (`benchmark/outputs_fourthset/`):
+
+| Field | Drafted value | Source |
+|---|---|---|
+| Population | Firdapse: adults and pediatric patients 6 years and older | FDA label |
+| Dosing | 15 mg to 30 mg daily in divided doses (adults) | FDA label |
+| Primary endpoint | Change in QMG score and Subject Global Impression score | FDA label, Section 14 |
+| Mechanism | Voltage-gated potassium channel blocker (amifampridine) | Open Targets |
+| Safety benchmark | Seizures; hypersensitivity, including anaphylaxis | FDA label |
+| Orphan designations | 5 existing | FDA OOPD |
+| Pricing, differentiation, CQAs, ... | *Gap: internal data, not drafted* | — |
+
+Each drafted field links to the record it came from.
 
 ## Install
 
 ```bash
-git clone <your-repo-url> && cd tppgen
+git clone https://github.com/DhruvASharma2004/tppgen.git && cd tppgen
 pip install -r requirements.txt
 ```
 
@@ -71,8 +87,8 @@ save it at `~/.tppgen_cache/orphan.csv`. Without it, the orphan field reports as
 
 ## Status
 
-Working end to end against all four live APIs, verified on cystic fibrosis,
-myotonic dystrophy type 1 and systemic sclerosis.
+Working end to end against all four live APIs, benchmarked on 40 rare diseases
+(see Benchmark).
 
 Three correctness rules the output depends on, each the result of a real failure
 caught in testing:
@@ -88,9 +104,10 @@ caught in testing:
    Early-phase trials dominate rare-disease registries, so adverse-event counts
    and visit-attendance measures would otherwise rank above the real endpoints.
 
-Known rough edges: comparator dosing text is the drug's full label rather than
-the part specific to this indication; recurring-criteria extraction from
-eligibility text is crude; the orphan export must be downloaded by hand.
+Known rough edges: an approved drug is missed when Open Targets lists no drug
+for the term or the product has no openFDA label (some gene therapies); where
+no label states the primary endpoint, trial counts can still rank a biomarker
+or operational measure first; the orphan export must be downloaded by hand.
 
 ## Caching
 

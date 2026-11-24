@@ -28,13 +28,3 @@
 2026-11-24	0352d47	GM1 gangliosidosis	MONDO_0018149	run1	rc=0
 2026-11-24	0352d47	GM1 gangliosidosis	MONDO_0018149	run2	rc=0
 2026-11-24	0352d47	GM1 gangliosidosis	MONDO_0018149	run3	rc=0
-2026-11-24	d77e07e	Primary hyperoxaluria type 1	MONDO_0009823	run1	rc=0
-2026-11-24	d77e07e	Mucopolysaccharidosis type VII	MONDO_0009662	run1	rc=0
-2026-11-24	d77e07e	Lambert-Eaton myasthenic syndrome	EFO_0020094	run1	rc=0
-2026-11-24	d77e07e	Paroxysmal nocturnal hemoglobinuria	MONDO_0100244	run1	rc=0
-2026-11-24	d77e07e	Generalized lipodystrophy	MONDO_0006536	run1	rc=0
-2026-11-24	d77e07e	Metachromatic leukodystrophy	MONDO_0018868	run1	rc=0
-2026-11-24	d77e07e	Ornithine transcarbamylase deficiency	MONDO_0010703	run1	rc=0
-2026-11-24	d77e07e	Amyotrophic lateral sclerosis	MONDO_0004976	run1	rc=0
-2026-11-24	d77e07e	Canavan disease	MONDO_0010079	run1	rc=0
-2026-11-24	d77e07e	GM1 gangliosidosis	MONDO_0018149	run1	rc=0

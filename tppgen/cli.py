@@ -60,7 +60,7 @@ def _disease_terms(name: str, studies: list[dict], top: int = 5) -> list[set[str
     # A condition counts as a synonym only if a quarter of the trials use it.
     # The registry search is fuzzy: a Rett search returns a few tuberous
     # sclerosis trials, and Epidiolex's label names tuberous sclerosis.
-    floor = max(2, len(studies) // 4)
+    floor = max(1, len(studies) // 4)
     names = [name.lower()] + [c for c, n in counts.most_common(top) if n >= floor]
     terms = []
     for n in names:
