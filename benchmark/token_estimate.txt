@@ -1,0 +1,4 @@
+labels with Section 14: 130
+input tokens per call: median 3,634, mean 4,430, 90th pct 7,733, max 12,797
+largest: Ultomiris 12,797, Levofloxacin 11,430, Tofidence 10,995, BKEMV 10,726, BENLYSTA 10,461
+budget assumed 30,000 per call: covers the 90th percentile
