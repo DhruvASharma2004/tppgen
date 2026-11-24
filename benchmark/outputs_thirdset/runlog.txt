@@ -148,3 +148,13 @@
 2026-11-24	0352d47	CLN3 disease	MONDO_0008767	run1	rc=0
 2026-11-24	0352d47	CLN3 disease	MONDO_0008767	run2	rc=0
 2026-11-24	0352d47	CLN3 disease	MONDO_0008767	run3	rc=0
+2026-11-24	d77e07e	Alpha-mannosidosis	MONDO_0009561	run1	rc=0
+2026-11-24	d77e07e	Mucopolysaccharidosis type IVA	MONDO_0018938	run1	rc=0
+2026-11-24	d77e07e	Mucopolysaccharidosis type VI	MONDO_0009661	run1	rc=0
+2026-11-24	d77e07e	CLN2 disease	MONDO_0008769	run1	rc=0
+2026-11-24	d77e07e	Nephropathic cystinosis	MONDO_0100151	run1	rc=0
+2026-11-24	d77e07e	Hereditary angioedema	MONDO_0019623	run1	rc=0
+2026-11-24	d77e07e	Achondroplasia	MONDO_0007037	run1	rc=0
+2026-11-24	d77e07e	Rett syndrome	MONDO_0010726	run1	rc=0
+2026-11-24	d77e07e	Charcot-Marie-Tooth disease type 1A	MONDO_0007309	run1	rc=0
+2026-11-24	d77e07e	CLN3 disease	MONDO_0008767	run1	rc=0

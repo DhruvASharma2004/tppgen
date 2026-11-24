@@ -13,7 +13,7 @@ tppgen drafted Target Product Profiles for 10 rare diseases, 3 runs each (30 rep
 | Fields correctly left blank | **261 of 261** |
 | Runs that matched exactly | **10 of 10** indications, all 3 runs identical |
 
-**Important:** the 97% is an in-sample result; the held-out result is 89% (below). The fixes that raised accuracy from 67% to 97% were made while looking at these same 10 diseases. Quote the held-out figure.
+**Important:** the 97% is an in-sample result. Across two clean held-out sets (20 unseen diseases) accuracy is **87%** (89% and 85%; below). The fixes that raised accuracy from 67% to 97% were made while looking at these same 10 diseases. Quote the held-out figure (87%).
 
 ## Held-out result
 
@@ -92,8 +92,8 @@ Four diseases were near-perfect (LEMS, MPS VII, PH1, PNH). Errors concentrate in
 
 | Cause | Fields lost per run | Diseases |
 |---|---|---|
-| Approved drug not reachable: Open Targets lists no drug for the term, or the gene therapy has no openFDA label | 14 missing, 2 inaccurate | generalized lipodystrophy (Myalept), MLD (Lenmeldy) |
-| Operational, safety or biomarker endpoint ranked first where no label states one | 9 | GM1, MLD, OTC, lipodystrophy |
+| Approved drug not reachable: Open Targets lists no drug for the term, or the gene therapy has no openFDA label | 14 missing | generalized lipodystrophy (Myalept), MLD (Lenmeldy) |
+| Operational, safety or biomarker endpoint ranked first where no label states one | 10 | GM1, MLD, OTC, lipodystrophy |
 | Wrong or incomplete standard of care | 3 | ALS (riluzole missing), OTC, lipodystrophy |
 | Wrong drug's mechanism | 2 | OTC (carglumic acid), lipodystrophy |
 | Orphan name mismatch ("ornithine carbamoyltransferase" vs FDA wording) | 1 | OTC |

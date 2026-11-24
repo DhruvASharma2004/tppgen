@@ -128,3 +128,13 @@
 2026-11-24	0352d47	Limb-girdle muscular dystrophy	MONDO_0016971	run1	rc=0
 2026-11-24	0352d47	Limb-girdle muscular dystrophy	MONDO_0016971	run2	rc=0
 2026-11-24	0352d47	Limb-girdle muscular dystrophy	MONDO_0016971	run3	rc=0
+2026-11-24	d77e07e	Niemann-Pick disease type C	MONDO_0018982	run1	rc=0
+2026-11-24	d77e07e	Mucopolysaccharidosis type I	MONDO_0001586	run1	rc=0
+2026-11-24	d77e07e	Mucopolysaccharidosis type II	MONDO_0010674	run1	rc=0
+2026-11-24	d77e07e	Hypophosphatasia	MONDO_0018570	run1	rc=0
+2026-11-24	d77e07e	X-linked hypophosphatemia	MONDO_0010619	run1	rc=0
+2026-11-24	d77e07e	Friedreich ataxia	MONDO_0100339	run1	rc=0
+2026-11-24	d77e07e	Acid sphingomyelinase deficiency	MONDO_0100464	run1	rc=0
+2026-11-24	d77e07e	Wilson disease	MONDO_0010200	run1	rc=0
+2026-11-24	d77e07e	Angelman syndrome	MONDO_0007113	run1	rc=0
+2026-11-24	d77e07e	Limb-girdle muscular dystrophy	MONDO_0016971	run1	rc=0
