@@ -42,6 +42,39 @@ Scores: [`scores_heldout.csv`](scores_heldout.csv) · Outputs: `outputs_heldout/
 
 The next fix is to take the primary endpoint from the approved drug's label (Section 14, Clinical Studies) when one exists, instead of from trial counts. That fix will be tested on a third, new set.
 
+## Third set (label-based primary endpoint)
+
+Ten more diseases, listed in `thirdset.csv` and committed (`d0b7b76`) before any run: alpha-mannosidosis, MPS IVA, MPS VI, CLN2, nephropathic cystinosis, hereditary angioedema, achondroplasia, Rett syndrome, Charcot-Marie-Tooth 1A, CLN3. Final run on commit `46e842d`, 3 runs each, identical across runs.
+
+**This is not a clean held-out test.** The label endpoint patterns were widened after one third-set label (Naglazyme) was seen (`ea3e762`, `a20ea47`), and a truncation bug was fixed after an MPS I miss (`46e842d`: Section 14 text had been cut at 400 characters). Quote 89% as the held-out number; read this set as a check on the endpoint fix.
+
+| Measure | Held-out set | Third set |
+|---|---|---|
+| Accuracy on drafted fields | 89% | **85%** (333 of 393) |
+| Recall on fillable fields | 89% | **80%** (333 of 417) |
+| Fields correctly left blank | 267 of 267 | 273 of 273 |
+| Primary endpoint right | 5 of 10 | **8 of 10** |
+
+The endpoint fix worked: the primary endpoint came from the approved label in 4 diseases (achondroplasia, HAE, MPS IVA, Rett), all correct. Two misses remain (alpha-mannosidosis, MPS VI), where the label states its endpoint in wording the patterns do not cover.
+
+New errors, all scored as found:
+
+| Cause | Fields lost per run | Diseases |
+|---|---|---|
+| Label endpoint wording not matched; primary and threshold fall back to trial counts | 4 | alpha-mannosidosis, MPS VI |
+| Epidiolex (LGS, Dravet, TSC) passed the label-names-the-disease check for Rett | 9 | Rett |
+| Route or dosing blank although the label gives it | 5 | achondroplasia, CLN2, cystinosis |
+| No registered trials, so label population, secondaries and threshold left blank | 3 | MPS IVA |
+| Strength from the wrong NDC record | 2 | achondroplasia, cystinosis |
+| PD biomarkers not filtered from secondaries | 2 | HAE, cystinosis |
+| "Hand function" mapped to the myotonia synonym | 1 | Rett |
+| Repeat-dose sentence chosen as dose | 1 | HAE (Kalbitor) |
+| Contraception boilerplate as population | 1 | CMT1A |
+
+Scores: [`scores_thirdset.csv`](scores_thirdset.csv) · Outputs: `outputs_thirdset/` · Scoring sheet built with `extract.py`.
+
+Held-out outputs were also rerun on `46e842d`; MPS I now shows the Aldurazyme label endpoint (percent-predicted FVC and 6-minute walk). The 89% score is from the original held-out run and was not rescored.
+
 ## Indications
 
 Eight with at least one FDA-approved therapy (tests comparator fields): cystic fibrosis, spinal muscular atrophy, Duchenne muscular dystrophy, Pompe disease, Fabry disease, Gaucher disease type 1, phenylketonuria, hereditary transthyretin amyloidosis.
