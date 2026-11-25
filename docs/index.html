@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'sha256-XopWsKL3hFBoBenuSrK0xu/neyfsXNtFbQkGE0kUdzk='; img-src data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>tppgen — 87% right, 0% invented</title>
+<meta name="description" content="tppgen drafts the public-data half of a drug Target Product Profile from FDA labels, ClinicalTrials.gov and Open Targets. 87% accuracy on 20 unseen rare diseases. Open source.">
+<meta property="og:title" content="tppgen — 87% right. 0% invented.">
+<meta property="og:description" content="Drafts the public-data half of a Target Product Profile. Fields with no public answer are left blank, never guessed.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23111'/%3E%3Ccircle cx='46' cy='44' r='7' fill='%23E5482D'/%3E%3C/svg%3E">
+<style>
+body{margin:0;background:#F4F2EE}
+a{color:#111111}a:hover{color:#B8321B}
+@keyframes rise{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@keyframes stamp{0%{opacity:0;transform:scale(1.35) rotate(-4deg)}60%{opacity:1;transform:scale(0.97) rotate(0)}100%{opacity:1;transform:none}}
+@keyframes redact{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes rule{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.rise{animation:rise .9s cubic-bezier(.2,.7,.2,1) both}
+.d1{animation-delay:.1s}.d2{animation-delay:.25s}.d3{animation-delay:.4s}.d4{animation-delay:1.7s}.d5{animation-delay:1.9s}.d6{animation-delay:2.05s}
+.stamp{animation:stamp .7s cubic-bezier(.2,.7,.2,1) 1.45s both;transform-origin:left bottom}
+.rule{transform-origin:left;animation:rule 1.1s cubic-bezier(.2,.7,.2,1) 1.6s both}
+@supports (animation-timeline: view()){
+.reveal{animation:rise linear both;animation-timeline:view();animation-range:entry 0% entry 100%}
+.redact{animation:redact linear both;animation-timeline:view();animation-range:entry 0% entry 100%}
+}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes type{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes blink{50%{opacity:0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.bond{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .7s cubic-bezier(.4,0,.2,1) both}
+.atom{animation:fade .5s ease both}
+.mol{animation:spin 90s linear 3.2s infinite;transform-origin:200px 170px;transform-box:view-box}
+.ln{animation:type .5s steps(36,end) both}
+.cursor{display:inline-block;width:9px;height:17px;background:#E5482D;vertical-align:-3px;animation:blink 1s steps(1) infinite}
+@supports (animation-timeline: view()){
+.log .ln{animation:type linear both;animation-timeline:view();animation-range:entry 0% entry 100%}
+}
+@keyframes pop{0%{opacity:0;transform:scale(.2) rotate(-20deg)}60%{opacity:1;transform:scale(1.12) rotate(4deg)}80%{transform:scale(.96)}100%{opacity:1;transform:none}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes wave{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(22deg)}}
+@keyframes wink{0%,90%,100%{transform:scaleY(1)}94%{transform:scaleY(.1)}}
+@keyframes squash{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.86)}}
+.buddy{animation:pop .9s cubic-bezier(.2,.7,.2,1) 2.1s both}
+.bob{animation:bob 2.4s ease-in-out 3s infinite}
+.wave{transform-box:view-box;transform-origin:206px 118px;animation:wave 1.1s ease-in-out 3s infinite}
+.eyes{transform-box:fill-box;transform-origin:center;animation:wink 4s 3.5s infinite}
+.shadow{transform-box:fill-box;transform-origin:center;animation:squash 2.4s ease-in-out 3s infinite}
+@media (prefers-reduced-motion: reduce){*{animation:none !important}}
+
+.log{white-space:normal !important}
+.log .ln{white-space:pre}
+@media (max-width:640px){
+.log{font-size:12px !important;padding:16px !important}
+.log .ln{white-space:pre-wrap}
+#sheet table{min-width:0 !important}
+#sheet tr{display:grid;grid-template-columns:1fr auto;padding:12px 16px}
+#sheet td{padding:0 !important;width:auto !important}
+#sheet td:first-child{grid-column:1;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+#sheet td:nth-child(3){grid-column:2;grid-row:1;font-size:12px}
+#sheet td:nth-child(2){grid-column:1 / -1;margin-top:6px}
+}
+@media (prefers-reduced-motion: reduce){*{animation:none !important}}
+</style>
+</head>
+<body>
+<div style="font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif; color: #111111; background: #F4F2EE">
+
+<header style="max-width: 1240px; margin: 0 auto; padding: 28px 32px; display: flex; flex-wrap: wrap; gap: 16px; align-items: baseline; justify-content: space-between; border-bottom: 2px solid #111111">
+<div style="font-weight: 900; font-size: 24px; letter-spacing: -0.03em">tppgen<span style="color: #E5482D">.</span></div>
+<nav style="display: flex; flex-wrap: wrap; gap: 28px; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em">
+<a href="#sheet" style="text-decoration: none">The output</a>
+<a href="#proof" style="text-decoration: none">The proof</a>
+<a href="https://github.com/DhruvASharma2004/tppgen" target="_blank" rel="noopener noreferrer" style="text-decoration: none">GitHub</a>
+</nav>
+</header>
+
+<section style="max-width: 1240px; margin: 0 auto; padding: 56px 32px 72px; position: relative; overflow: hidden">
+<div class="rise" style="font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #B8321B; margin-bottom: 24px">Target Product Profiles, drafted from public data</div>
+<div style="display: flex; flex-wrap: wrap; gap: 0 56px; align-items: flex-end; position: relative">
+<div style="display: flex; flex-direction: column">
+<div class="rise d1" style="font-weight: 900; font-size: clamp(120px, 21vw, 300px); line-height: 0.82; letter-spacing: -0.06em; font-variant-numeric: tabular-nums"><span id="pct">87</span>%</div>
+<div class="rise d2" style="font-weight: 800; font-size: clamp(32px, 4.4vw, 60px); letter-spacing: -0.03em; margin-top: 12px">right.</div>
+</div>
+<div style="display: flex; flex-direction: column">
+<div class="stamp" style="font-weight: 900; font-size: clamp(120px, 21vw, 300px); line-height: 0.82; letter-spacing: -0.06em; color: #E5482D">0%</div>
+<div class="stamp" style="font-weight: 800; font-size: clamp(32px, 4.4vw, 60px); letter-spacing: -0.03em; margin-top: 12px">invented.</div>
+</div>
+</div>
+<p class="rise d4" style="margin: 28px 0 0; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 13px; line-height: 1.6; color: #5E5A52; max-width: 860px">87% of drafted fields matched the public record on 20 rare diseases the tool had not seen (687 of 786). 0 fields stated anything missing from their cited source, and all 552 fields with no public answer (internal fields, or comparators where no drug is approved) were left blank. The other 13% were real records applied wrongly.</p>
+<div class="rule" style="height: 1px; background: #111111; margin-top: 32px"></div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; padding-top: 28px">
+<p class="rise d4" style="margin: 0; font-size: 22px; line-height: 1.4; font-weight: 500; letter-spacing: -0.01em">Most drug programs start with a Target Product Profile. About two-thirds of it is public. Teams usually assemble it by hand.</p>
+<p class="rise d5" style="margin: 0; font-size: 18px; line-height: 1.55; color: #3B3B3B">tppgen drafts that part with one command from FDA labels, trial registries and orphan designations, with a source on every field. What only a company knows, it leaves blank. It never guesses.</p>
+<figure class="buddy" style="margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; justify-self: center">
+<svg viewBox="0 0 300 300" role="img" aria-label="Cartoon amifampridine molecule waving" style="width: 230px; height: auto; display: block; overflow: visible">
+<ellipse class="shadow" cx="150" cy="286" rx="70" ry="9" fill="#111111" opacity="0.18"/>
+<g class="bob">
+<g stroke="#111111" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+<line x1="150" y1="78" x2="150" y2="30"/>
+<circle cx="150" cy="24" r="19" fill="#E5482D"/>
+<g class="wave">
+<line x1="206" y1="118" x2="252" y2="84"/>
+<circle cx="258" cy="79" r="19" fill="#E5482D"/>
+</g>
+<polygon points="158,86 227,126 227,206 158,246 89,206 89,126" fill="#111111" stroke="none"/>
+<polygon points="150,78 219,118 219,198 150,238 81,198 81,118" fill="#FFE9C7"/>
+<circle cx="150" cy="238" r="21" fill="#E5482D"/>
+</g>
+<g font-family="ui-monospace, Menlo, Consolas, monospace" font-weight="700" text-anchor="middle" fill="#FFFFFF">
+<text x="150" y="246" font-size="22">N</text>
+<text x="150" y="29" font-size="13">NH₂</text>
+</g>
+<text class="wave" x="258" y="84" font-family="ui-monospace, Menlo, Consolas, monospace" font-weight="700" font-size="13" text-anchor="middle" fill="#FFFFFF">NH₂</text>
+<g class="eyes" stroke="#111111" stroke-width="5">
+<circle cx="128" cy="142" r="14" fill="#FFFFFF"/>
+<circle cx="172" cy="142" r="14" fill="#FFFFFF"/>
+<circle cx="132" cy="145" r="6" fill="#111111" stroke="none"/>
+<circle cx="176" cy="145" r="6" fill="#111111" stroke="none"/>
+</g>
+<circle cx="112" cy="170" r="8" fill="#F29B85"/>
+<circle cx="188" cy="170" r="8" fill="#F29B85"/>
+<path d="M130 172 Q150 196 170 172" fill="none" stroke="#111111" stroke-width="6" stroke-linecap="round"/>
+</g>
+</svg>
+<figcaption style="font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12px; color: #5E5A52; letter-spacing: 0.04em">amifampridine · C₅H₇N₃ · the LEMS drug</figcaption>
+</figure>
+</div>
+<div class="rise d6" style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px">
+<a href="https://github.com/DhruvASharma2004/tppgen" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; min-height: 52px; padding: 0 28px; background: #111111; color: #F4F2EE; font-weight: 600; font-size: 17px; text-decoration: none">See the code</a>
+<a href="https://github.com/DhruvASharma2004/tppgen/blob/main/benchmark/REPORT.md" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; min-height: 52px; padding: 0 28px; border: 2px solid #111111; font-weight: 600; font-size: 17px; text-decoration: none">Read the benchmark</a>
+</div>
+</section>
+
+<section id="sheet" style="background: #111111; color: #F4F2EE">
+<div style="max-width: 1240px; margin: 0 auto; padding: 80px 32px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px; align-items: flex-end; margin-bottom: 40px">
+<h2 class="reveal" style="margin: 0; font-weight: 800; font-size: clamp(36px, 5vw, 64px); line-height: 1; letter-spacing: -0.03em; max-width: 760px">It fills what's public.<br>It redacts what isn't.</h2>
+<div style="font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 13px; color: #A8A49C; text-transform: uppercase; letter-spacing: 0.06em">Excerpt of a real run · Lambert-Eaton myasthenic syndrome</div>
+</div>
+<div class="log" style="font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 15px; line-height: 1.75; color: #D9D5CD; border: 1px solid #3A3833; padding: 24px 28px; margin-bottom: 32px; overflow-x: auto; white-space: pre">
+<div class="ln"><span style="color: #E5482D">$</span> python -m tppgen build EFO_0020094</div>
+<div class="ln">Resolving EFO_0020094 ...</div>
+<div class="ln">  <span style="color: #8A867E">-&gt;</span> Lambert-Eaton myasthenic syndrome</div>
+<div class="ln">Fetching registered trials ...</div>
+<div class="ln">  <span style="color: #8A867E">-&gt;</span> 6 interventional studies · 2 approved drugs</div>
+<div class="ln">Fetching labels for approved therapies ...</div>
+<div class="ln">  <span style="color: #8A867E">-&gt;</span> 2 labels matched · orphan designations: 5</div>
+<div class="ln"> </div>
+<div class="ln" style="color: #F4F2EE">11 drafted · 5 benchmarked · <span style="color: #E5482D">7 gaps</span> <span class="cursor"></span></div>
+</div>
+<div style="background: #F4F2EE; color: #111111; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 15px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding: 18px 28px; border-bottom: 2px solid #111111; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em">
+<span>Target Product Profile — draft</span><span>23 fields · 16 drafted · 7 withheld</span>
+</div>
+<div style="overflow-x: auto">
+<table style="width: 100%; min-width: 680px; border-collapse: collapse">
+<tbody>
+<tr class="reveal" style="border-bottom: 1px solid #CFCBC3"><td style="padding: 16px 28px; width: 28%; color: #5E5A52">Population</td><td style="padding: 16px 28px">Adults and children 6 years and older</td><td style="padding: 16px 28px; width: 18%; color: #5E5A52; text-align: right">FDA label</td></tr>
+<tr class="reveal" style="border-bottom: 1px solid #CFCBC3"><td style="padding: 16px 28px; color: #5E5A52">Dosing</td><td style="padding: 16px 28px">Starting dose 15–30 mg daily, divided</td><td style="padding: 16px 28px; color: #5E5A52; text-align: right">FDA label</td></tr>
+<tr class="reveal" style="border-bottom: 1px solid #CFCBC3"><td style="padding: 16px 28px; color: #5E5A52">Primary endpoint</td><td style="padding: 16px 28px">Change in QMG and Subject Global Impression</td><td style="padding: 16px 28px; color: #5E5A52; text-align: right">Label §14</td></tr>
+<tr class="reveal" style="border-bottom: 1px solid #CFCBC3"><td style="padding: 16px 28px; color: #5E5A52">Mechanism</td><td style="padding: 16px 28px">Voltage-gated K⁺ channel blocker</td><td style="padding: 16px 28px; color: #5E5A52; text-align: right">Open Targets</td></tr>
+<tr class="reveal" style="border-bottom: 1px solid #CFCBC3"><td style="padding: 16px 28px; color: #5E5A52">Safety benchmark</td><td style="padding: 16px 28px">Seizures; hypersensitivity incl. anaphylaxis</td><td style="padding: 16px 28px; color: #5E5A52; text-align: right">FDA label</td></tr>
+<tr class="reveal" style="border-bottom: 1px solid #CFCBC3"><td style="padding: 16px 28px; color: #5E5A52">Pricing</td><td style="padding: 16px 28px"><span class="redact" style="display: inline-block; background: #111111; color: #F4F2EE; padding: 3px 10px; font-size: 12px; letter-spacing: 0.08em">INTERNAL — NOT GUESSED</span></td><td style="padding: 16px 28px; color: #B8321B; text-align: right">withheld</td></tr>
+<tr class="reveal" style="border-bottom: 1px solid #CFCBC3"><td style="padding: 16px 28px; color: #5E5A52">Differentiation</td><td style="padding: 16px 28px"><span class="redact" style="display: inline-block; background: #111111; color: #F4F2EE; padding: 3px 10px; font-size: 12px; letter-spacing: 0.08em">INTERNAL — NOT GUESSED</span></td><td style="padding: 16px 28px; color: #B8321B; text-align: right">withheld</td></tr>
+<tr><td style="padding: 16px 28px; color: #5E5A52">Quality attributes</td><td style="padding: 16px 28px"><span class="redact" style="display: inline-block; background: #111111; color: #F4F2EE; padding: 3px 10px; font-size: 12px; letter-spacing: 0.08em">INTERNAL — NOT GUESSED</span></td><td style="padding: 16px 28px; color: #B8321B; text-align: right">withheld</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</section>
+
+<section id="proof" style="max-width: 1240px; margin: 0 auto; padding: 88px 32px">
+<div style="display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; align-items: flex-end; margin-bottom: 48px">
+<h2 class="reveal" style="margin: 0; font-weight: 800; font-size: clamp(36px, 5vw, 64px); line-height: 1; letter-spacing: -0.03em; max-width: 720px">Tested on diseases it had never seen.</h2>
+<p style="margin: 0; font-size: 17px; line-height: 1.55; color: #3B3B3B; max-width: 380px">The scoring rules and each test set were locked into Git before a single run. Then it ran with no code changes.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); border-top: 2px solid #111111">
+<div class="reveal" style="padding: 28px 24px 28px 0; border-bottom: 1px solid #CFCBC3; display: flex; flex-direction: column; gap: 8px">
+<div style="font-weight: 900; font-size: 72px; line-height: 1; letter-spacing: -0.04em">20</div>
+<div style="font-size: 16px; color: #3B3B3B">unseen rare diseases</div>
+</div>
+<div class="reveal" style="padding: 28px 24px 28px 0; border-bottom: 1px solid #CFCBC3; display: flex; flex-direction: column; gap: 8px">
+<div style="font-weight: 900; font-size: 72px; line-height: 1; letter-spacing: -0.04em">786</div>
+<div style="font-size: 16px; color: #3B3B3B">drafted fields checked against public records</div>
+</div>
+<div class="reveal" style="padding: 28px 24px 28px 0; border-bottom: 1px solid #CFCBC3; display: flex; flex-direction: column; gap: 8px">
+<div style="font-weight: 900; font-size: 72px; line-height: 1; letter-spacing: -0.04em; color: #E5482D">552</div>
+<div style="font-size: 16px; color: #3B3B3B">fields with no public answer, all left blank</div>
+</div>
+<div class="reveal" style="padding: 28px 24px 28px 0; border-bottom: 1px solid #CFCBC3; display: flex; flex-direction: column; gap: 8px">
+<div style="font-weight: 900; font-size: 72px; line-height: 1; letter-spacing: -0.04em">3×</div>
+<div style="font-size: 16px; color: #3B3B3B">runs per disease, identical output</div>
+</div>
+</div>
+<p style="margin: 32px 0 0; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 14px; line-height: 1.6; color: #5E5A52; max-width: 820px">Open about the gaps too: the primary endpoint is right in 10 of 20 unseen diseases. Every score and every miss is public.</p>
+</section>
+
+<section style="background: #E5482D; color: #111111">
+<div style="max-width: 1240px; margin: 0 auto; padding: 72px 32px; display: flex; flex-wrap: wrap; gap: 32px; align-items: center; justify-content: space-between">
+<h2 class="reveal" style="margin: 0; font-weight: 800; font-size: clamp(32px, 4.4vw, 56px); line-height: 1.02; letter-spacing: -0.03em; max-width: 720px">From manual copying to a cited draft.</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 12px">
+<a href="https://github.com/DhruvASharma2004/tppgen" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; min-height: 52px; padding: 0 28px; background: #111111; color: #F4F2EE; font-weight: 600; font-size: 17px; text-decoration: none">See the code</a>
+<a href="https://github.com/DhruvASharma2004/tppgen/issues/new" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; min-height: 52px; padding: 0 28px; border: 2px solid #111111; font-weight: 600; font-size: 17px; text-decoration: none">Open an issue</a>
+</div>
+</div>
+</section>
+
+<footer style="max-width: 1240px; margin: 0 auto; padding: 28px 32px; display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12px; color: #5E5A52; text-transform: uppercase; letter-spacing: 0.05em">
+<span>tppgen · open-source project</span>
+<span>Drafts only. Not medical, regulatory or investment advice.</span>
+</footer>
+</div>
+<script>
+(function(){
+var el=document.getElementById('pct');if(!el)return;
+if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+el.textContent='0';var start=performance.now()+100,dur=1300;
+function tick(t){var k=Math.min(1,Math.max(0,(t-start)/dur));el.textContent=Math.round(87*(1-Math.pow(1-k,3)));if(k<1)requestAnimationFrame(tick);}
+requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
