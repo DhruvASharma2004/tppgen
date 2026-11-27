@@ -114,6 +114,35 @@ def label_primary_endpoints(labels: list[dict], disease_words: set[str] | None =
     return out
 
 
+_EP_STOP = set("""a an and the of in on to for from with by at as or vs versus
+baseline change week weeks month months day days score scores total mean percent
+percentage proportion number rate time patients participants subjects treatment
+treated period overall response measured assessed using based at least from""".split())
+
+
+def _ep_words(text: str) -> set[str]:
+    words = set(re.findall(r"[a-z][a-z0-9-]{2,}", (text or "").lower()))
+    return {w for w in words if w not in _EP_STOP}
+
+
+def endpoint_conflict(label_eps: list[str], trial_eps: list[str]) -> bool:
+    """True when the late-phase trials' leading efficacy endpoints share no
+    concept and no content word with any endpoint the approved labels name.
+
+    Both sources are shown either way; this only tells the reader that they
+    point at different things, so they do not have to spot it themselves.
+    """
+    if not label_eps or not trial_eps:
+        return False
+    lab_concepts = {aggregate.endpoint_concept(e) for e in label_eps} - {None}
+    lab_words = set().union(*(_ep_words(e) for e in label_eps))
+    for t in trial_eps:
+        c = aggregate.endpoint_concept(t)
+        if (c and c in lab_concepts) or (_ep_words(t) & lab_words):
+            return False
+    return True
+
+
 def _unique_labels(labels: list[dict]) -> list[dict]:
     seen, out = set(), []
     for lab in labels:
@@ -218,7 +247,13 @@ def build(ctx: dict) -> list[dict]:
             if ev.supported:
                 text += " · Most frequent in late-phase trials: " + "; ".join(
                     f"{r['endpoint'][:80]} ({r['trials']})" for r in ev.value[:3])
-            out.append(_entry(f, text, [{"name": n, "url": u} for _, n, u in eps[:3]] + (ev.citations[:2] if ev.supported else [])))
+            entry = _entry(f, text, [{"name": n, "url": u} for _, n, u in eps[:3]] + (ev.citations[:2] if ev.supported else []))
+            if ev.supported and endpoint_conflict([e for e, _, _ in eps[:3]],
+                                                  [r["endpoint"] for r in ev.value[:3]]):
+                entry["note"] = ("Sources disagree: the approved label and the most frequent "
+                                 "late-phase trial endpoints measure different things. "
+                                 "The label shows what FDA accepted; check which one your program is designed around.")
+            out.append(entry)
 
         elif f.key in ("primary_endpoint", "secondary_endpoints"):
             which = "primary_outcomes" if f.key == "primary_endpoint" else "secondary_outcomes"
